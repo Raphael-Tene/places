@@ -1,18 +1,19 @@
+// @ts-nocheck
 import React, { Fragment } from "react";
-import { MongoClient } from "mongodb";
+import { MongoClient, ObjectId } from "mongodb";
 import MeetupDetail from "../../components/meetups/MeetupDetail";
 
 const password = process.env.PASSWORD;
 const mongodbURL = `mongodb+srv://agenttango:${password}@places.54eqipc.mongodb.net/?retryWrites=true&w=majority`;
 
-function MeetId() {
+function MeetId(props) {
   return (
     <Fragment>
       <MeetupDetail
-        img="https://lh3.googleusercontent.com/p/AF1QipNVlM5lo7fIJrmvjN4EOrTMiQjDgDyTfw7ATdV6=s680-w680-h510"
-        title="First Meetup"
-        address="Some Address"
-        description="First Meetup"
+        img={props.meetupData.image}
+        title={props.meetupData.title}
+        address={props.meetupData.address}
+        description={props.meetupData.description}
       />
     </Fragment>
   );
@@ -22,35 +23,34 @@ export async function getStaticPaths() {
   const client = await MongoClient.connect(mongodbURL);
   const db = client.db();
   const meetupsCollection = db.collection("places");
-  
+  const meetups = await meetupsCollection.find({}, { _id: 1 }).toArray();
+  client.close();
   return {
     fallback: false,
-    paths: [
-      {
-        params: {
-          meetupId: "m1",
-        },
-      },
-      {
-        params: {
-          meetupId: "m2",
-        },
-      },
-    ],
+    paths: meetups.map((meetup) => ({
+      params: { meetupId: meetup._id.toString() },
+    })),
   };
 }
 
 export async function getStaticProps(context) {
-  //TODO fetch data from an API
   const meetupId = context.params.meetupId;
+  const client = await MongoClient.connect(mongodbURL);
+  const db = client.db();
+  const meetupsCollection = db.collection("places");
+  const selectedMeetup = await meetupsCollection.findOne({
+    _id: ObjectId(meetupId),
+  });
+  client.close();
+
   return {
     props: {
       meetupData: {
-        img: "https://lh3.googleusercontent.com/p/AF1QipNVlM5lo7fIJrmvjN4EOrTMiQjDgDyTfw7ATdV6=s680-w680-h510",
-        id: meetupId,
-        title: "First Meetup",
-        address: "Some Address",
-        description: "First Meetup",
+        id: selectedMeetup._id.toString(),
+        image: selectedMeetup.data.image,
+        title: selectedMeetup.data.title,
+        address: selectedMeetup.data.address,
+        description: selectedMeetup.data.description,
       },
     },
   };

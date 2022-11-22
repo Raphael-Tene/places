@@ -1,17 +1,23 @@
 // @ts-nocheck
-import React from "react";
+import Head from "next/head";
+import React, { Fragment } from "react";
 import { MongoClient } from "mongodb";
 import MeetupList from "../components/meetups/MeetupList";
 
 const password = process.env.PASSWORD;
 const mongodbURL = `mongodb+srv://agenttango:${password}@places.54eqipc.mongodb.net/?retryWrites=true&w=majority`;
 
-
-
 function HomePage(props) {
-  return <MeetupList meetups={props.meetups} />;
+  return (
+    <Fragment>
+      <Head>
+        <title>React Meetups</title>
+        <meta>name='description' content="Trying my hands on Next Js!"</meta>
+      </Head>
+      <MeetupList meetups={props.meetups} />
+    </Fragment>
+  );
 }
-
 
 // *Client side props regeneration (rerendering)*
 export async function getStaticProps() {

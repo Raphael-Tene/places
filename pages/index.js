@@ -1,44 +1,39 @@
-
+// @ts-nocheck
 import React from "react";
+import { MongoClient } from "mongodb";
 import MeetupList from "../components/meetups/MeetupList";
 
-const DUMMY_MEETUPS = [
-  {
-    id: "m1",
-    title: "First Meetup",
-    image:
-      "https://lh3.googleusercontent.com/p/AF1QipNVlM5lo7fIJrmvjN4EOrTMiQjDgDyTfw7ATdV6=s680-w680-h510",
-    address: "Some Street",
-    description: "This a first meet up",
-  },
-  {
-    id: "m2",
-    title: "Second Meetup",
-    image:
-      "https://lh3.googleusercontent.com/p/AF1QipNVlM5lo7fIJrmvjN4EOrTMiQjDgDyTfw7ATdV6=s680-w680-h510",
-    address: "Some Street",
-    description: "This a first meet up",
-  },
-];
+const password = process.env.PASSWORD;
+const mongodbURL = `mongodb+srv://agenttango:${password}@places.54eqipc.mongodb.net/?retryWrites=true&w=majority`;
+
+
 
 function HomePage(props) {
   return <MeetupList meetups={props.meetups} />;
 }
 
-// *sever side props regeneration (rerendering)
-// export async function getServerSideProps() {
-//   return {
-//     props: {
-//       meetups: DUMMY_MEETUPS
-//     }
-//   }
-// }
 
 // *Client side props regeneration (rerendering)*
 export async function getStaticProps() {
+  const client = await MongoClient.connect(mongodbURL);
+  const db = client.db();
+  const meetupsCollection = db.collection("places");
+  const meetups = await meetupsCollection.find().toArray();
+
+  // meetups.map((meetup) => {
+  //   console.log(meetup._id, meetup.data);
+  // });
+
+  client.close();
+
   return {
     props: {
-      meetups: DUMMY_MEETUPS,
+      meetups: meetups.map((meetup) => ({
+        id: meetup._id.toString(),
+        title: meetup.data.title,
+        address: meetup.data.address,
+        image: meetup.data.image,
+      })),
     },
     revalidate: 1,
   };

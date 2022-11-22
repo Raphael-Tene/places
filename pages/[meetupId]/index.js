@@ -1,5 +1,9 @@
 import React, { Fragment } from "react";
+import { MongoClient } from "mongodb";
 import MeetupDetail from "../../components/meetups/MeetupDetail";
+
+const password = process.env.PASSWORD;
+const mongodbURL = `mongodb+srv://agenttango:${password}@places.54eqipc.mongodb.net/?retryWrites=true&w=majority`;
 
 function MeetId() {
   return (
@@ -15,6 +19,10 @@ function MeetId() {
 }
 
 export async function getStaticPaths() {
+  const client = await MongoClient.connect(mongodbURL);
+  const db = client.db();
+  const meetupsCollection = db.collection("places");
+  
   return {
     fallback: false,
     paths: [
